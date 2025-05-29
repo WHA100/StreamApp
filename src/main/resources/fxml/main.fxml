@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.layout.HBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.streamapp.ui.MainController"
+      spacing="10"
+      styleClass="main-container">
+    
+    <ListView fx:id="usersList" VBox.vgrow="ALWAYS"/>
+    
+    <HBox spacing="10" alignment="CENTER">
+        <Button fx:id="startStreamButton" text="Начать трансляцию" disable="true"/>
+        <Button fx:id="stopStreamButton" text="Остановить трансляцию" disable="true"/>
+    </HBox>
+</VBox> 

@@ -1,0 +1,34 @@
+# Maven
+/target/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# Java
+*.class
+
+# Логи
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# JavaFX
+*.db
+
+# Конфиденциальные файлы
+*.key
+*.crt
+*.pem
+
+# Тестовые отчёты
+/test-output/
+
+# Кэш
+.cache/ 
