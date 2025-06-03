@@ -1,0 +1,45 @@
+.root {
+    -fx-background-color: #1E1E1E;
+    -fx-font-family: "Roboto", "Segoe UI", sans-serif;
+}
+
+.label {
+    -fx-text-fill: white;
+}
+
+#appNameLabel {
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 0, 2);
+}
+
+#statusLabel {
+    -fx-text-fill: #BDBDBD;
+    -fx-font-size: 14px;
+}
+
+.progress-indicator {
+    -fx-progress-color: #2196F3;
+}
+
+.progress-indicator .percentage {
+    -fx-fill: null;
+}
+
+.progress-indicator .indicator {
+    -fx-background-color: transparent;
+}
+
+.progress-indicator .spinner {
+    -fx-background-color: transparent;
+}
+
+.progress-indicator .spinner .increment-arrow,
+.progress-indicator .spinner .decrement-arrow {
+    -fx-background-color: #2196F3;
+}
+
+.progress-indicator .spinner .increment-button,
+.progress-indicator .spinner .decrement-button {
+    -fx-background-color: transparent;
+} 
