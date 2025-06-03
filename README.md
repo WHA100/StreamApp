@@ -23,6 +23,22 @@ mvn clean install
 mvn javafx:run
 ```
 
+### 4. Запуск тестов
+Для запуска всех тестов:
+```bash
+mvn test
+```
+
+Для запуска конкретного теста:
+```bash
+mvn test -Dtest=MDNSServiceTest
+```
+
+Для запуска тестов с подробным выводом:
+```bash
+mvn test -Dtest=MDNSServiceTest -Dsurefire.useFile=false
+```
+
 ### Альтернативный способ запуска
 После сборки проекта вы можете запустить приложение напрямую через JAR-файл:
 ```bash

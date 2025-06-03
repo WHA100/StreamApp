@@ -14,7 +14,16 @@
         <maven.compiler.target>17</maven.compiler.target>
         <javafx.version>17</javafx.version>
         <junit.version>5.9.2</junit.version>
+        <jmdns.version>3.5.7</jmdns.version>
     </properties>
+
+    <repositories>
+        <repository>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2</url>
+        </repository>
+    </repositories>
 
     <dependencies>
         <!-- JavaFX -->
@@ -33,7 +42,8 @@
         <dependency>
             <groupId>org.jmdns</groupId>
             <artifactId>jmdns</artifactId>
-            <version>3.5.8</version>
+            <version>${jmdns.version}</version>
+            <scope>compile</scope>
         </dependency>
 
         <!-- WebSocket клиент -->
@@ -100,6 +110,11 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.1.2</version>
+                <configuration>
+                    <includes>
+                        <include>**/*Test.java</include>
+                    </includes>
+                </configuration>
             </plugin>
         </plugins>
     </build>
