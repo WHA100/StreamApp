@@ -26,6 +26,7 @@ public class MDNSService {
     private final ObservableList<DeviceInfo> discoveredDevices;
     private ServiceInfo serviceInfo;
     private boolean isRegistered;
+    private ServiceRegistrationManager registrationManager;
 
     /**
      * Создает новый экземпляр MDNS сервиса.
@@ -44,6 +45,7 @@ public class MDNSService {
         logger.info("Инициализация mDNS сервиса");
         InetAddress localHost = InetAddress.getLocalHost();
         jmdns = JmDNS.create(localHost);
+        this.registrationManager = new ServiceRegistrationManager(jmdns);
         
         // Добавляем слушатель для обнаружения сервисов
         jmdns.addServiceListener(MDNSConstants.SERVICE_TYPE, new ServiceListener() {
@@ -95,12 +97,6 @@ public class MDNSService {
      * @throws IOException если произошла ошибка при регистрации
      */
     public void registerService(String username, String status, String version) throws IOException {
-        if (isRegistered) {
-            logger.warn("Сервис уже зарегистрирован");
-            return;
-        }
-
-        logger.info("Регистрация mDNS сервиса");
         Map<String, String> properties = new HashMap<>();
         properties.put(MDNSConstants.TXT_USERNAME, username);
         properties.put(MDNSConstants.TXT_STATUS, status);
@@ -108,25 +104,30 @@ public class MDNSService {
 
         serviceInfo = ServiceInfo.create(
             MDNSConstants.SERVICE_TYPE,
-            MDNSConstants.DEFAULT_SERVICE_NAME,
+            username,
             MDNSConstants.DEFAULT_PORT,
-            0, 0, properties
+            0, 0,
+            properties
         );
 
-        jmdns.registerService(serviceInfo);
-        isRegistered = true;
-        logger.info("mDNS сервис успешно зарегистрирован");
+        registrationManager.registerService(serviceInfo);
     }
 
     /**
      * Отменяет регистрацию сервиса.
      */
     public void unregisterService() {
+        registrationManager.unregisterService();
+    }
+
+    /**
+     * Приватный метод для реальной отмены регистрации (вызывается только менеджером).
+     */
+    void doUnregisterService() {
         if (!isRegistered) {
             logger.warn("Сервис не был зарегистрирован");
             return;
         }
-
         logger.info("Отмена регистрации mDNS сервиса");
         jmdns.unregisterService(serviceInfo);
         isRegistered = false;
@@ -143,7 +144,9 @@ public class MDNSService {
         if (isRegistered) {
             unregisterService();
         }
-        jmdns.close();
+        if (jmdns != null) {
+            jmdns.close();
+        }
         logger.info("mDNS сервис успешно закрыт");
     }
 
@@ -162,6 +165,18 @@ public class MDNSService {
      * @return true, если сервис зарегистрирован
      */
     public boolean isRegistered() {
+        if (registrationManager != null) {
+            return registrationManager.isRegistered();
+        }
         return isRegistered;
+    }
+
+    /**
+     * Устанавливает статус регистрации.
+     *
+     * @param registered статус регистрации
+     */
+    void setRegistered(boolean registered) {
+        isRegistered = registered;
     }
 } 
