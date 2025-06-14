@@ -45,6 +45,34 @@ mvn test -Dtest=MDNSServiceTest -Dsurefire.useFile=false
 java -jar target/streamapp-1.0-SNAPSHOT.jar
 ```
 
+### Создание нативного пакета
+Для создания нативного пакета (не требующего установленной Java) выполните следующие команды:
+
+```bash
+# Сборка JAR-файла
+mvn clean package
+
+# Создание нативного пакета
+mvn jpackage:jpackage
+```
+
+После успешного выполнения команд, нативный пакет будет создан в директории `target/dist`:
+- Для Linux: `.deb` пакет
+- Для macOS: `.dmg` или `.pkg`
+- Для Windows: `.exe` или `.msi`
+
+Установка нативного пакета:
+- Linux (Debian/Ubuntu):
+  ```bash
+  sudo dpkg -i target/dist/StreamApp_1.0.0-1_amd64.deb
+  ```
+- Linux (RHEL/Fedora):
+  ```bash
+  sudo rpm -i target/dist/StreamApp-1.0.0-1.x86_64.rpm
+  ```
+- macOS: Дважды кликните на `.dmg` или `.pkg` файл
+- Windows: Запустите `.exe` или `.msi` файл
+
 ## Конфигурация
 Основные настройки приложения находятся в файле `src/main/resources/application.properties`:
 - `stream.quality` - качество трансляции (по умолчанию: 1080p)
