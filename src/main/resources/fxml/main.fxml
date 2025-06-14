@@ -9,9 +9,10 @@
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="com.streamapp.ui.MainController"
       spacing="10"
-      styleClass="main-container">
+      styleClass="main-container"
+      stylesheets="@/styles/user-list.css">
     
-    <ListView fx:id="usersList" VBox.vgrow="ALWAYS"/>
+    <fx:include source="UserListView.fxml"/>
     
     <HBox spacing="10" alignment="CENTER">
         <Button fx:id="startStreamButton" text="Начать трансляцию" disable="true"/>

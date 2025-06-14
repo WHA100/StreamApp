@@ -88,6 +88,7 @@ public class SplashScreenController {
                 
                 // Здесь будет переход к основному окну приложения
                 logger.info("Загрузка завершена");
+                javafx.application.Platform.runLater(this::showMainScreen);
             } catch (InterruptedException e) {
                 logger.error("Ошибка при загрузке", e);
                 Thread.currentThread().interrupt();
@@ -104,5 +105,21 @@ public class SplashScreenController {
             statusLabel.setText(status);
             logger.info("Статус загрузки: {}", status);
         });
+    }
+
+    /**
+     * Переход к основному окну приложения.
+     */
+    private void showMainScreen() {
+        try {
+            javafx.fxml.FXMLLoader loader = new javafx.fxml.FXMLLoader(getClass().getResource("/fxml/main.fxml"));
+            javafx.scene.Parent root = loader.load();
+            javafx.stage.Stage stage = (javafx.stage.Stage) statusLabel.getScene().getWindow();
+            javafx.scene.Scene scene = new javafx.scene.Scene(root);
+            stage.setScene(scene);
+            stage.show();
+        } catch (Exception e) {
+            logger.error("Ошибка при переходе к основному окну", e);
+        }
     }
 } 
