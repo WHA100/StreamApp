@@ -21,11 +21,9 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.reset;
 
 class UserDiscoveryServiceTest {
     private static final String TEST_USERNAME = "testUser";
-    private static final String TEST_SERVICE_TYPE = "_streamapp._tcp.local.";
     private static final int TEST_PORT = 8080;
 
     @Mock
@@ -54,8 +52,18 @@ class UserDiscoveryServiceTest {
     void testServiceRegistration() throws IOException {
         // Проверяем, что сервис был зарегистрирован
         verify(mockJmDNS, times(1)).registerService(any(ServiceInfo.class));
+        
+        // Проверяем, что поиск не запущен
+        assertFalse(userDiscoveryService.isDiscoveryStarted(), "Поиск не должен быть запущен после создания");
+        
+        // Запускаем поиск
         userDiscoveryService.startDiscovery();
-        verify(mockJmDNS, times(2)).addServiceListener(eq("_streamapp._tcp.local."), any());
+        
+        // Проверяем, что слушатель был добавлен
+        verify(mockJmDNS, times(1)).addServiceListener(eq(MDNSConstants.SERVICE_TYPE), any());
+        
+        // Проверяем, что поиск запущен
+        assertTrue(userDiscoveryService.isDiscoveryStarted(), "Поиск должен быть запущен");
     }
 
     @Test
@@ -64,13 +72,13 @@ class UserDiscoveryServiceTest {
         // Создаем тестовый ServiceInfo
         ServiceInfo testServiceInfo = mock(ServiceInfo.class);
         when(testServiceInfo.getName()).thenReturn("discoveredUser");
-        when(testServiceInfo.getType()).thenReturn(TEST_SERVICE_TYPE);
+        when(testServiceInfo.getType()).thenReturn(MDNSConstants.SERVICE_TYPE);
         when(testServiceInfo.getInetAddresses()).thenReturn(new java.net.InetAddress[]{java.net.InetAddress.getLocalHost()});
 
         // Симулируем обнаружение нового пользователя
         ServiceEvent serviceEvent = mock(ServiceEvent.class);
         when(serviceEvent.getInfo()).thenReturn(testServiceInfo);
-        when(serviceEvent.getType()).thenReturn(TEST_SERVICE_TYPE);
+        when(serviceEvent.getType()).thenReturn(MDNSConstants.SERVICE_TYPE);
         when(serviceEvent.getName()).thenReturn("discoveredUser");
 
         // Получаем список пользователей
@@ -79,7 +87,7 @@ class UserDiscoveryServiceTest {
 
         // Симулируем события обнаружения сервиса
         userDiscoveryService.startDiscovery();
-        verify(mockJmDNS, times(2)).addServiceListener(eq("_streamapp._tcp.local."), any());
+        verify(mockJmDNS, times(1)).addServiceListener(eq(MDNSConstants.SERVICE_TYPE), any());
 
         // Получаем ServiceListener и вызываем его методы
         ServiceListener listener = getServiceListener();
@@ -99,17 +107,18 @@ class UserDiscoveryServiceTest {
         // Создаем тестовый ServiceInfo
         ServiceInfo testServiceInfo = mock(ServiceInfo.class);
         when(testServiceInfo.getName()).thenReturn("discoveredUser");
-        when(testServiceInfo.getType()).thenReturn(TEST_SERVICE_TYPE);
+        when(testServiceInfo.getType()).thenReturn(MDNSConstants.SERVICE_TYPE);
+        when(testServiceInfo.getInetAddresses()).thenReturn(new java.net.InetAddress[]{java.net.InetAddress.getLocalHost()});
 
         // Симулируем обнаружение пользователя
         ServiceEvent addEvent = mock(ServiceEvent.class);
         when(addEvent.getInfo()).thenReturn(testServiceInfo);
-        when(addEvent.getType()).thenReturn(TEST_SERVICE_TYPE);
+        when(addEvent.getType()).thenReturn(MDNSConstants.SERVICE_TYPE);
         when(addEvent.getName()).thenReturn("discoveredUser");
 
         // Симулируем отключение пользователя
         ServiceEvent removeEvent = mock(ServiceEvent.class);
-        when(removeEvent.getType()).thenReturn(TEST_SERVICE_TYPE);
+        when(removeEvent.getType()).thenReturn(MDNSConstants.SERVICE_TYPE);
         when(removeEvent.getName()).thenReturn("discoveredUser");
 
         // Получаем список пользователей
@@ -117,7 +126,15 @@ class UserDiscoveryServiceTest {
 
         // Симулируем события
         userDiscoveryService.startDiscovery();
-        verify(mockJmDNS, times(2)).addServiceListener(eq("_streamapp._tcp.local."), any());
+        verify(mockJmDNS, times(1)).addServiceListener(eq(MDNSConstants.SERVICE_TYPE), any());
+
+        // Получаем ServiceListener
+        ServiceListener listener = getServiceListener();
+        
+        // Симулируем добавление и удаление пользователя
+        listener.serviceAdded(addEvent);
+        listener.serviceResolved(addEvent);
+        listener.serviceRemoved(removeEvent);
 
         // Проверяем, что пользователь был удален из списка
         assertEquals(0, users.size(), "Список пользователей должен быть пустым после отключения");
@@ -126,10 +143,21 @@ class UserDiscoveryServiceTest {
     @Test
     @Timeout(value = 5, unit = TimeUnit.SECONDS)
     void testShutdown() throws IOException {
+        // Запускаем поиск
+        userDiscoveryService.startDiscovery();
+        assertTrue(userDiscoveryService.isDiscoveryStarted(), "Поиск должен быть запущен");
+        
         // Вызываем shutdown
         userDiscoveryService.shutdown();
+        
         // Проверяем, что unregisterService был вызван
         verify(mockJmDNS, atLeastOnce()).unregisterService(any(ServiceInfo.class));
+        
+        // Проверяем, что слушатель был удален
+        verify(mockJmDNS, times(1)).removeServiceListener(eq(MDNSConstants.SERVICE_TYPE), any());
+        
+        // Проверяем, что поиск остановлен
+        assertFalse(userDiscoveryService.isDiscoveryStarted(), "Поиск должен быть остановлен");
     }
 
     @Test
@@ -143,13 +171,13 @@ class UserDiscoveryServiceTest {
         for (int i = 0; i < usernames.length; i++) {
             ServiceInfo serviceInfo = mock(ServiceInfo.class);
             when(serviceInfo.getName()).thenReturn(usernames[i]);
-            when(serviceInfo.getType()).thenReturn(TEST_SERVICE_TYPE);
+            when(serviceInfo.getType()).thenReturn(MDNSConstants.SERVICE_TYPE);
             when(serviceInfo.getInetAddresses()).thenReturn(new java.net.InetAddress[]{java.net.InetAddress.getLocalHost()});
             testServices[i] = serviceInfo;
 
             ServiceEvent serviceEvent = mock(ServiceEvent.class);
             when(serviceEvent.getInfo()).thenReturn(serviceInfo);
-            when(serviceEvent.getType()).thenReturn(TEST_SERVICE_TYPE);
+            when(serviceEvent.getType()).thenReturn(MDNSConstants.SERVICE_TYPE);
             when(serviceEvent.getName()).thenReturn(usernames[i]);
             serviceEvents[i] = serviceEvent;
         }
@@ -159,7 +187,7 @@ class UserDiscoveryServiceTest {
 
         // Симулируем события
         userDiscoveryService.startDiscovery();
-        verify(mockJmDNS, times(2)).addServiceListener(eq("_streamapp._tcp.local."), any());
+        verify(mockJmDNS, times(1)).addServiceListener(eq(MDNSConstants.SERVICE_TYPE), any());
 
         // Получаем ServiceListener и вызываем его методы для каждого пользователя
         ServiceListener listener = getServiceListener();
@@ -175,6 +203,19 @@ class UserDiscoveryServiceTest {
         for (User user : users) {
             assertEquals(UserStatus.ONLINE, user.getStatus());
         }
+    }
+
+    @Test
+    @Timeout(value = 5, unit = TimeUnit.SECONDS)
+    void testDoubleStartDiscovery() throws IOException {
+        // Первый запуск поиска
+        userDiscoveryService.startDiscovery();
+        verify(mockJmDNS, times(1)).addServiceListener(eq(MDNSConstants.SERVICE_TYPE), any());
+        
+        // Второй запуск поиска
+        userDiscoveryService.startDiscovery();
+        // Проверяем, что слушатель не был добавлен повторно
+        verify(mockJmDNS, times(1)).addServiceListener(eq(MDNSConstants.SERVICE_TYPE), any());
     }
 
     private ServiceListener getServiceListener() {
